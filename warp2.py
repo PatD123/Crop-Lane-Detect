@@ -11,12 +11,12 @@ import math
 ORIGINAL_SIZE = 1280, 720
 UNWARPED_SIZE = 500, 600
 
-imgs = ["test_images2/straight_lines1.jpg"]
+imgs = ["test_images2/test6.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
-# y=425 the upper bound.
-# y=665 the lower bound.
+# y=425 the upper bound (original_size[0] - 295).
+# y=665 the lower bound (original_size[1] - 55).
 # Make a triangle shape to identify lines that go off into vanishing point.
 # MAKE NOTE THAT YOU ALWAYS DO WIDTH (X) THEN HEIGHT (Y).
 roi_points = np.array([[0, ORIGINAL_SIZE[1] - 55],
@@ -27,6 +27,7 @@ cv2.fillPoly(roi, [roi_points], 1)
 
 # Employing Gaussian Blur
 img = cv2.GaussianBlur(img,(3,3),2)
+# Might need to skip horizontal lines when doing HoughLine
 
 # Canny + Hough Lines
 img_HLS = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
@@ -40,9 +41,81 @@ high_thresh = 200
 edges = cv2.Canny(_l_channel, low_thresh, high_thresh)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
 lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 30, None, 180, 120)
+
+Lhs = np.zeros((2, 2), dtype = np.float32)
+Rhs = np.zeros((2, 1), dtype = np.float32)
+x_max = 0
+x_min = 2555    
 for line in lines:
     for x1, y1, x2, y2 in line:
+        # Find the norm (the distances between the two points)
+        normal = np.array([[-(y2-y1)], [x2-x1]], dtype = np.float32) # question about this implementation
+        normal = normal / np.linalg.norm(normal)
+        pt = np.array([[x1], [y1]], dtype = np.float32)
+        outer = np.matmul(normal, normal.T)
+        
+        Lhs += outer
+        Rhs += np.matmul(outer, pt) #use matmul for matrix multiply and not dot product
+
         cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 1)
+
+        x_iter_max = max(x1, x2)
+        x_iter_min = min(x1, x2)
+        x_max = max(x_max, x_iter_max)
+        x_min = min(x_min, x_iter_min)
+width = x_max - x_min
+print('width : ', width)
+# Calculate Vanishing Point
+vp = np.matmul(np.linalg.inv(Lhs), Rhs)
+vp = vp.flatten()
+
+print('vp is : ', vp)
+plt.plot(vp[0], vp[1], 'c^')
+
+# Drawing up source points for perspective warps
+def find_pt_inline(p1, p2, y):
+    """
+    Here we use point-slope formula in order to find a point that is present on the line
+    that passes through our vanishing point (vp). 
+    input: points p1, p2, and y. They come is as tuples [x, y]
+    We then use the point-slope formula: y - b = m(x - a)
+    y: y-coordinate of desired point on the line
+    x: x-coordinate of desired point on the line
+    m: slope
+    b: y-coordinate of p1
+    a: x-coodrinate of p1
+    x = p1x + (1/m)(y - p1y)
+    """
+    m_inv = (p2[0] - p1[0]) / float(p2[1] - p1[1])
+    Δy = (y - p1[1])
+    x = p1[0] + m_inv * Δy
+    return [x, y]
+
+top = vp[1] + 65
+bot = ORIGINAL_SIZE[1] - 40
+
+# Make a large width so that you can grab the lines on the challenge video
+width = 500
+
+p1 = [vp[0] - width/2, top]
+p2 = [vp[0] + width/2, top]
+p3 = find_pt_inline(p2, vp, bot)
+p4 = find_pt_inline(p1, vp, bot)
+
+src_pts = np.float32([p1, p2, p3, p4])
+
+dst_pts = np.float32([[0, 0], [UNWARPED_SIZE[0], 0],
+                       [UNWARPED_SIZE[0], UNWARPED_SIZE[1]],
+                       [0, UNWARPED_SIZE[1]]])
+
+# Draw Trapezoid
+cv2.polylines(img, [src_pts.astype(np.int32)],True, (0,200,100), thickness=5)
+plt.plot(p1[0], p1[1], 'r+')
+plt.plot(p2[0], p2[1], 'c^')
+plt.plot(p3[0], p3[1], 'r^')
+plt.plot(p4[0], p4[1], 'g^')
+plt.title('Trapezoid For Perspective Transform')
+
 
 plt.imshow(img)
 plt.show()
