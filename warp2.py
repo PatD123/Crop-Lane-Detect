@@ -25,6 +25,9 @@ roi_points = np.array([[0, ORIGINAL_SIZE[1] - 55],
 roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
 cv2.fillPoly(roi, [roi_points], 1)
 
+# Employing Gaussian Blur
+img = cv2.GaussianBlur(img,(3,3),2)
+
 # Canny + Hough Lines
 img_HLS = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
 _h_channel = img_HLS[:, :, 0]
@@ -35,14 +38,14 @@ low_thresh = 100
 high_thresh = 200
 # Better to do Canny on lightness channel
 edges = cv2.Canny(_l_channel, low_thresh, high_thresh)
-lines = cv2.HoughLinesP(edges*roi, 0.5, np.pi/180, 20, None, 180, 120)
+new_img = cv2.bitwise_and(edges, edges, mask=roi)
+lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 30, None, 180, 120)
 for line in lines:
     for x1, y1, x2, y2 in line:
         cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 1)
 
 plt.imshow(img)
 plt.show()
-
 
 
 
