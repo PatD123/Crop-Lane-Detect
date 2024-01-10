@@ -9,9 +9,9 @@ import glob
 import math
 
 ORIGINAL_SIZE = 1280, 720
-UNWARPED_SIZE = 500, 600
+WARPED_SIZE = 500, 600
 
-imgs = ["test_images2/test6.jpg"]
+imgs = ["test_images2/test2.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -57,7 +57,7 @@ for line in lines:
         Lhs += outer
         Rhs += np.matmul(outer, pt) #use matmul for matrix multiply and not dot product
 
-        cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 1)
+        cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
 
         x_iter_max = max(x1, x2)
         x_iter_min = min(x1, x2)
@@ -92,10 +92,10 @@ def find_pt_inline(p1, p2, y):
     return [x, y]
 
 top = vp[1] + 65
-bot = ORIGINAL_SIZE[1] - 40
+bot = ORIGINAL_SIZE[1] - 55
 
 # Make a large width so that you can grab the lines on the challenge video
-width = 500
+width = 350
 
 p1 = [vp[0] - width/2, top]
 p2 = [vp[0] + width/2, top]
@@ -103,20 +103,45 @@ p3 = find_pt_inline(p2, vp, bot)
 p4 = find_pt_inline(p1, vp, bot)
 
 src_pts = np.float32([p1, p2, p3, p4])
+src_pts = np.float32([[ 462.2556, 487.81726 ],
+                      [ 812.2556, 487.81726 ],
+                      [1289.286, 665.      ],
+                      [ -14.774837, 665.      ]])
 
-dst_pts = np.float32([[0, 0], [UNWARPED_SIZE[0], 0],
-                       [UNWARPED_SIZE[0], UNWARPED_SIZE[1]],
-                       [0, UNWARPED_SIZE[1]]])
+dst_pts = np.float32([[0, 0], [WARPED_SIZE[0], 0],
+                       [WARPED_SIZE[0], WARPED_SIZE[1]],
+                       [0, WARPED_SIZE[1]]])
 
 # Draw Trapezoid
-cv2.polylines(img, [src_pts.astype(np.int32)],True, (0,200,100), thickness=5)
-plt.plot(p1[0], p1[1], 'r+')
-plt.plot(p2[0], p2[1], 'c^')
-plt.plot(p3[0], p3[1], 'r^')
-plt.plot(p4[0], p4[1], 'g^')
+cv2.polylines(img, [src_pts.astype(np.int32)],True, (0,200,100), thickness=2)
+plt.plot(p1[0], p1[1])
+plt.plot(p2[0], p2[1])
+plt.plot(p3[0], p3[1])
+plt.plot(p4[0], p4[1])
 plt.title('Trapezoid For Perspective Transform')
 
+# Add current car trajectory
+traj_p1 = [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 55]
+traj_p2 = [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 100]
+cv2.line(img, traj_p1, traj_p2, (255, 0, 0), thickness = 2)
 
+src_pts[0] += [-1, 1]
+src_pts[1] += [1, 1]
+M = cv2.getPerspectiveTransform(src_pts, dst_pts)
+warped_img = cv2.warpPerspective(img, M, WARPED_SIZE)
+# M is what you will be using from now on.
+
+# Next steps ...
+# 1) Find mid-line between the two lane lines, serving as our reference line.
+# 2) Warp and then hough for the reference line.
+# 3) We already know the position of the current trajectory in warp (still just middle
+#    of the image). Do some linear algebra to get distance in pixels.
+# 4) Also still need to figure out pixel2meter.
+#   a) Split project into 2: 1 for pixel2meter and 2 for running livestream
+
+f1 = plt.figure(1)
+plt.imshow(warped_img)
+f2 = plt.figure(2)
 plt.imshow(img)
 plt.show()
 
