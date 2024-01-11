@@ -12,6 +12,7 @@ ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
 imgs = ["test_images2/straight_lines1.jpg"]
+#imgs = ["test_images2/straight_lines1.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -119,7 +120,7 @@ left_x1 = int((y1 - left_fitted_av[1]) / left_fitted_av[0])
 left_x2 = int((y2 - left_fitted_av[1]) / left_fitted_av[0])
 right_x1 = int((y1 - right_fitted_av[1]) / right_fitted_av[0])
 right_x2 = int((y2 - right_fitted_av[1]) / right_fitted_av[0])
-cv2.line(img, (left_x1, y1), (left_x2, int(y2)), (0, 0, 255), thickness = 2)
+cv2.line(img, (left_x1, y1), (left_x2, int(y2)), (255, 0, 0), thickness = 2)
 cv2.line(img, (right_x1, y1), (right_x2, int(y2)), (255, 0, 0), thickness = 2)
 
 # Make a large width so that you can grab the lines on the challenge video
@@ -151,12 +152,13 @@ plt.title('Trapezoid For Perspective Transform')
 # Add current car trajectory
 traj_p1 = [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 55]
 traj_p2 = [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 100]
-cv2.line(img, traj_p1, traj_p2, (255, 0, 0), thickness = 2)
+# cv2.line(img, traj_p1, traj_p2, (255, 0, 0), thickness = 2)
 
 src_pts[0] += [-1, 1]
 src_pts[1] += [1, 1]
 M = cv2.getPerspectiveTransform(src_pts, dst_pts)
 warped_img = cv2.warpPerspective(img, M, WARPED_SIZE)
+f = warped_img
 # M is what you will be using from now on.
 
 # Next steps ...
@@ -167,10 +169,20 @@ warped_img = cv2.warpPerspective(img, M, WARPED_SIZE)
 # 4) Also still need to figure out pixel2meter.
 #   a) Split project into 2: 1 for pixel2meter and 2 for running livestream
 
-# Prepare warped image for canny
+# Transform averaged points into warped coordinates.
+# Endpoints for averaged lines
+bot_left = np.array([left_x1, y1], dtype="float32")
+top_left = np.array([left_x2, int(y2)], dtype="float32")
+bot_right = np.array([right_x1, y1], dtype="float32")
+top_right = np.array([right_x2, int(y2)], dtype="float32")
 
+# Transforming above endpoints
+bot_left = cv2.perspectiveTransform(np.array([[bot_left]]), M, WARPED_SIZE).squeeze()
+top_left = cv2.perspectiveTransform(np.array([[top_left]]), M, WARPED_SIZE).squeeze()
+bot_right = cv2.perspectiveTransform(np.array([[bot_right]]), M, WARPED_SIZE).squeeze()
+top_right = cv2.perspectiveTransform(np.array([[top_right]]), M, WARPED_SIZE).squeeze()
 
-plt.imshow(img)
+plt.imshow(f)
 plt.show()
 
 
