@@ -11,7 +11,7 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["test_images2/straight_lines1.jpg"]
+imgs = ["test_images2/test2.jpg"]
 #imgs = ["test_images2/straight_lines1.jpg"]
 img = mpimg.imread(imgs[0])
 
@@ -184,33 +184,12 @@ top_right = cv2.perspectiveTransform(np.array([[top_right]]), M, WARPED_SIZE).sq
 cv2.line(f, bot_left.astype("int"), top_left.astype("int"), (0, 255, 0), 3)
 cv2.line(f, bot_right.astype("int"), top_right.astype("int"), (0, 255, 0), 3)
 
-av = []
-l_slope = (top_left[1] - bot_left[1]) / (top_left[0] - bot_left[0])
-print(l_slope)
-l_int = top_left[1] - top_left[0] * l_slope
-print(l_int)
-r_slope = (top_right[1] - bot_right[1]) / (top_right[0] - bot_right[0])
-print(r_slope)
-r_int = top_right[1] - top_right[0] * r_slope
-print(r_int)
-
-avg_slope = 0
-avg_int = 0
-if r_slope < 0 and l_slope > 0:
-    avg_slope = (-l_slope + r_slope) / 2
-    avg_int = (-l_int + r_int) / 2
-elif r_slope > 0 and l_slope < 0:
-    avg_slope = (l_slope - r_slope) / 2
-    avg_int = (l_int - r_int) / 2
-else:
-    avg_slope = (r_slope + l_slope) / 2
-    avg_int = (r_int + l_int) / 2
-avg_x = int((500 - avg_int) / avg_slope)
-print(avg_slope, avg_int)
-
-# Try doing a histogram bro
-
-cv2.line(f, (avg_x, 500), (0, int(avg_int)), (0, 0, 255), 3)
+mid_top = [int((top_left[0] + top_right[0]) / 2),
+         int((top_left[1] + top_right[1]) / 2)]
+mid_bot = [int((bot_left[0] + bot_right[0]) / 2),
+         int((bot_left[1] + bot_right[1]) / 2)]
+print(mid_top, mid_bot)
+cv2.line(f, mid_top, mid_bot, (0, 0, 255), 3)
 
 plt.imshow(f)
 plt.show()
