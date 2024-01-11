@@ -11,8 +11,8 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-#imgs = ["test_images2/test2.jpg"]
-imgs = ["test_images2/straight_lines1.jpg"]
+imgs = ["test_images2/test2.jpg"]
+#imgs = ["test_images2/straight_lines1.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -187,23 +187,27 @@ mid_bot = [int((bot_left[0] + bot_right[0]) / 2),
 # Drawing mid-line
 cv2.line(f, mid_top, mid_bot, (0, 0, 255), 3)
 # Add current car trajectory
-traj_p1 = [f.shape[1] // 2, 500]
-traj_p2 = [f.shape[1] // 2, 0]
-cv2.line(f, traj_p1, traj_p2, (255, 0, 0), thickness = 2)
+traj_bot = [f.shape[1] // 2, 500]
+traj_top = [f.shape[1] // 2, 0]
+cv2.line(f,traj_bot, traj_top, (0, 0, 255), 3)
+x = traj_bot[0]
+mid_slope = (mid_top[1] - mid_bot[1]) / (mid_top[0] - mid_bot[0])
+mid_int = mid_top[1] - mid_top[0] * mid_slope
+y = x * mid_slope + mid_int
+P = np.array([x, y])
 
 
-A = np.array(traj_p1) - np.array(traj_p2)
-B = np.array(mid_bot) - np.array(mid_top)
+PA = np.array(traj_bot) - P
+PB = np.array(mid_bot) - P
 
-print(A, B)
-B_mag = np.linalg.norm(B)
-B_unit = B / B_mag
-A_parallel = np.dot(A, B_unit) * B_unit
-A_parallel_pt = A_parallel + mid_top
+PB_mag = np.linalg.norm(PB)
+PB_unit = PB / PB_mag
+A_parallel = np.dot(PA, PB_unit) * PB_unit
+A_parallel_pt = A_parallel + P
 
 # Find Intercept
 
-cv2.line(f,traj_p1, A_parallel_pt.astype("int"), (0, 0, 255), 3)
+cv2.line(f,traj_bot, A_parallel_pt.astype("int"), (0, 0, 255), 3)
 
 plt.imshow(f)
 plt.show()
