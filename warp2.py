@@ -11,7 +11,7 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["test_images2/test2.jpg"]
+imgs = ["test_images2/straight_lines1.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -46,6 +46,8 @@ Lhs = np.zeros((2, 2), dtype = np.float32)
 Rhs = np.zeros((2, 1), dtype = np.float32)
 x_max = 0
 x_min = 2555    
+left_av = []
+right_av = []
 for line in lines:
     for x1, y1, x2, y2 in line:
         # Find the norm (the distances between the two points)
@@ -57,7 +59,15 @@ for line in lines:
         Lhs += outer
         Rhs += np.matmul(outer, pt) #use matmul for matrix multiply and not dot product
 
-        cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
+        # Average out the lines
+        slope = (y2 - y1) / (x2 - x1)
+        intercept = y1 - (slope * x1)
+        if slope > 0:
+            right_av.append([slope, intercept])
+            #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
+        else:
+            left_av.append([slope, intercept])
+            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
 
         x_iter_max = max(x1, x2)
         x_iter_min = min(x1, x2)
@@ -71,6 +81,10 @@ vp = vp.flatten()
 
 print('vp is : ', vp)
 plt.plot(vp[0], vp[1], 'c^')
+
+# Cont. Averaging Lines
+left_fitted_av = np.average(left_av, axis=0)
+right_fitted_av = np.average(right_av, axis=0)
 
 # Drawing up source points for perspective warps
 def find_pt_inline(p1, p2, y):
@@ -93,6 +107,20 @@ def find_pt_inline(p1, p2, y):
 
 top = vp[1] + 65
 bot = ORIGINAL_SIZE[1] - 55
+
+#print(900*right_av[0][0] + right_av[0][1])
+#cv2.line(img, (0, -38), (900, 1188), (0, 0, 255), 3)
+
+
+# Cont. Averaging Lines
+y1 = bot
+y2 = top
+left_x1 = int((y1 - left_fitted_av[1]) / left_fitted_av[0])
+left_x2 = int((y2 - left_fitted_av[1]) / left_fitted_av[0])
+right_x1 = int((y1 - right_fitted_av[1]) / right_fitted_av[0])
+right_x2 = int((y2 - right_fitted_av[1]) / right_fitted_av[0])
+cv2.line(img, (left_x1, y1), (left_x2, int(y2)), (0, 0, 255), thickness = 2)
+cv2.line(img, (right_x1, y1), (right_x2, int(y2)), (255, 0, 0), thickness = 2)
 
 # Make a large width so that you can grab the lines on the challenge video
 width = 350
@@ -139,9 +167,9 @@ warped_img = cv2.warpPerspective(img, M, WARPED_SIZE)
 # 4) Also still need to figure out pixel2meter.
 #   a) Split project into 2: 1 for pixel2meter and 2 for running livestream
 
-f1 = plt.figure(1)
-plt.imshow(warped_img)
-f2 = plt.figure(2)
+# Prepare warped image for canny
+
+
 plt.imshow(img)
 plt.show()
 
