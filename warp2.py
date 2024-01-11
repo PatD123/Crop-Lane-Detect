@@ -11,8 +11,8 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["test_images2/test2.jpg"]
-#imgs = ["test_images2/straight_lines1.jpg"]
+#imgs = ["test_images2/test2.jpg"]
+imgs = ["test_images2/straight_lines1.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -149,11 +149,6 @@ plt.plot(p3[0], p3[1])
 plt.plot(p4[0], p4[1])
 plt.title('Trapezoid For Perspective Transform')
 
-# Add current car trajectory
-traj_p1 = [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 55]
-traj_p2 = [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 100]
-# cv2.line(img, traj_p1, traj_p2, (255, 0, 0), thickness = 2)
-
 src_pts[0] += [-1, 1]
 src_pts[1] += [1, 1]
 M = cv2.getPerspectiveTransform(src_pts, dst_pts)
@@ -188,8 +183,27 @@ mid_top = [int((top_left[0] + top_right[0]) / 2),
          int((top_left[1] + top_right[1]) / 2)]
 mid_bot = [int((bot_left[0] + bot_right[0]) / 2),
          int((bot_left[1] + bot_right[1]) / 2)]
-print(mid_top, mid_bot)
+
+# Drawing mid-line
 cv2.line(f, mid_top, mid_bot, (0, 0, 255), 3)
+# Add current car trajectory
+traj_p1 = [f.shape[1] // 2, 500]
+traj_p2 = [f.shape[1] // 2, 0]
+cv2.line(f, traj_p1, traj_p2, (255, 0, 0), thickness = 2)
+
+
+A = np.array(traj_p1) - np.array(traj_p2)
+B = np.array(mid_bot) - np.array(mid_top)
+
+print(A, B)
+B_mag = np.linalg.norm(B)
+B_unit = B / B_mag
+A_parallel = np.dot(A, B_unit) * B_unit
+A_parallel_pt = A_parallel + mid_top
+
+# Find Intercept
+
+cv2.line(f,traj_p1, A_parallel_pt.astype("int"), (0, 0, 255), 3)
 
 plt.imshow(f)
 plt.show()

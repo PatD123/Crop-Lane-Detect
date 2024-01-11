@@ -11,7 +11,7 @@ import math
 ORIGINAL_SIZE = 640, 480
 UNWARPED_SIZE = 500, 600
 
-imgs = ["test_images/1.jpg"]
+imgs = ["test_images1/1.jpg"]
 img = mpimg.imread(imgs[0])
 
 #plt.imshow(img)
