@@ -11,8 +11,8 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["test_images2/test2.jpg"]
-#imgs = ["test_images2/straight_lines1.jpg"]
+imgs = ["test_images2/test6.jpg"]
+#imgs = ["test_images2/straight_lines2.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -187,16 +187,20 @@ mid_bot = [int((bot_left[0] + bot_right[0]) / 2),
 # Drawing mid-line
 cv2.line(f, mid_top, mid_bot, (0, 0, 255), 3)
 # Add current car trajectory
-traj_bot = [f.shape[1] // 2, 500]
+traj_bot = [f.shape[1] // 2, 600]
 traj_top = [f.shape[1] // 2, 0]
 cv2.line(f,traj_bot, traj_top, (0, 0, 255), 3)
 x = traj_bot[0]
-mid_slope = (mid_top[1] - mid_bot[1]) / (mid_top[0] - mid_bot[0])
+mid_slope = 0
+if mid_top[0] - mid_bot[0] != 0:
+    mid_slope = (mid_top[1] - mid_bot[1]) / (mid_top[0] - mid_bot[0])
+else:
+    mid_slope = (mid_top[1] - mid_bot[1]) * 1000
 mid_int = mid_top[1] - mid_top[0] * mid_slope
 y = x * mid_slope + mid_int
 P = np.array([x, y])
 
-
+# Calculating pixel distance between averaged line and trajectory line.
 PA = np.array(traj_bot) - P
 PB = np.array(mid_bot) - P
 
