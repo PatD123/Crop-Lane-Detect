@@ -11,8 +11,8 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["test_images2/test6.jpg"]
-#imgs = ["test_images2/straight_lines2.jpg"]
+imgs = ["test_images2/frame0387.jpg"]
+#imgs = ["test_images2/straight_lines1.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -20,8 +20,8 @@ img = mpimg.imread(imgs[0])
 # y=665 the lower bound (original_size[1] - 55).
 # Make a triangle shape to identify lines that go off into vanishing point.
 # MAKE NOTE THAT YOU ALWAYS DO WIDTH (X) THEN HEIGHT (Y).
-roi_points = np.array([[0, ORIGINAL_SIZE[1] - 55],
-                       [ORIGINAL_SIZE[0], ORIGINAL_SIZE[1] - 55],
+roi_points = np.array([[100, ORIGINAL_SIZE[1] - 55],
+                       [ORIGINAL_SIZE[0] - 100, ORIGINAL_SIZE[1] - 55],
                        [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 295]])
 roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
 cv2.fillPoly(roi, [roi_points], 1)
@@ -36,11 +36,21 @@ _h_channel = img_HLS[:, :, 0]
 _l_channel  = img_HLS[:, :, 1]
 _s_channel = img_HLS[:, :, 2]
 
+#print(_l_channel[603][418])
+
+#ret, p = cv2.threshold(_l_channel,140, 255,cv2.THRESH_BINARY)
+#ret, q = cv2.threshold(_l_channel,160,255,cv2.THRESH_BINARY)
+#_l_channel = cv2.bitwise_xor(p, q)
+ret, p = cv2.threshold(_l_channel, 160, 255, cv2.THRESH_BINARY_INV)
+equalized_image = cv2.equalizeHist(_l_channel)
+
 low_thresh = 100
 high_thresh = 200
 # Better to do Canny on lightness channel
-edges = cv2.Canny(_l_channel, low_thresh, high_thresh)
+edges = cv2.Canny(p, high_thresh, low_thresh)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
+plt.imshow(equalized_image)
+plt.show()
 lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 30, None, 180, 120)
 
 Lhs = np.zeros((2, 2), dtype = np.float32)
@@ -65,10 +75,10 @@ for line in lines:
         intercept = y1 - (slope * x1)
         if slope > 0:
             right_av.append([slope, intercept])
-            #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
+            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
         else:
             left_av.append([slope, intercept])
-            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
 
         x_iter_max = max(x1, x2)
         x_iter_min = min(x1, x2)
@@ -82,6 +92,9 @@ vp = vp.flatten()
 
 print('vp is : ', vp)
 plt.plot(vp[0], vp[1], 'c^')
+
+plt.imshow(img)
+plt.show()
 
 # Cont. Averaging Lines
 left_fitted_av = np.average(left_av, axis=0)
@@ -124,7 +137,7 @@ cv2.line(img, (left_x1, y1), (left_x2, int(y2)), (255, 0, 0), thickness = 2)
 cv2.line(img, (right_x1, y1), (right_x2, int(y2)), (255, 0, 0), thickness = 2)
 
 # Make a large width so that you can grab the lines on the challenge video
-width = 350
+width = 300
 
 p1 = [vp[0] - width/2, top]
 p2 = [vp[0] + width/2, top]
@@ -132,17 +145,17 @@ p3 = find_pt_inline(p2, vp, bot)
 p4 = find_pt_inline(p1, vp, bot)
 
 src_pts = np.float32([p1, p2, p3, p4])
-src_pts = np.float32([[ 462.2556, 487.81726 ],
-                      [ 812.2556, 487.81726 ],
-                      [1289.286, 665.      ],
-                      [ -14.774837, 665.      ]])
+#src_pts = np.float32([[ 462.2556, 487.81726 ],
+#                      [ 812.2556, 487.81726 ],
+#                      [1289.286, 665.      ],
+#                      [ -14.774837, 665.      ]])
 
 dst_pts = np.float32([[0, 0], [WARPED_SIZE[0], 0],
                        [WARPED_SIZE[0], WARPED_SIZE[1]],
                        [0, WARPED_SIZE[1]]])
 
 # Draw Trapezoid
-cv2.polylines(img, [src_pts.astype(np.int32)],True, (0,200,100), thickness=2)
+cv2.polylines(img, [src_pts.astype(np.int32)],True, (0,200,100), thickness=5)
 plt.plot(p1[0], p1[1])
 plt.plot(p2[0], p2[1])
 plt.plot(p3[0], p3[1])
@@ -213,7 +226,9 @@ A_parallel_pt = A_parallel + P
 
 cv2.line(f,traj_bot, A_parallel_pt.astype("int"), (0, 0, 255), 3)
 
-plt.imshow(f)
+#print(src_pts)
+
+plt.imshow(img)
 plt.show()
 
 
