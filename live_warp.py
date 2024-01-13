@@ -37,6 +37,8 @@ def getLines(img):
     #ret, q = cv2.threshold(_l_channel,160,255,cv2.THRESH_BINARY)
     #_l_channel = cv2.bitwise_xor(p, q)
 
+    _l_channel = cv2.equalizeHist(_l_channel)
+
     low_thresh = 100
     high_thresh = 200
     # Better to do Canny on lightness channel

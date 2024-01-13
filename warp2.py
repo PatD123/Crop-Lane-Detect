@@ -80,10 +80,10 @@ for line in lines:
         intercept = y1 - (slope * x1)
         if slope > 0:
             right_av.append([slope, intercept])
-            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
+            #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
         else:
             left_av.append([slope, intercept])
-            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
 
         x_iter_max = max(x1, x2)
         x_iter_min = min(x1, x2)
@@ -233,7 +233,7 @@ cv2.line(f,traj_bot, A_parallel_pt.astype("int"), (0, 0, 255), 3)
 
 #print(src_pts)
 
-plt.imshow(img)
+plt.imshow(f)
 plt.show()
 
 
