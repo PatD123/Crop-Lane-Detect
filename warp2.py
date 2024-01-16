@@ -11,7 +11,7 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["test_images2/frame0387.jpg"]
+imgs = ["test_images2/frame0312.jpg"]
 #imgs = ["test_images2/straight_lines1.jpg"]
 img = mpimg.imread(imgs[0])
 
@@ -20,8 +20,8 @@ img = mpimg.imread(imgs[0])
 # y=665 the lower bound (original_size[1] - 55).
 # Make a triangle shape to identify lines that go off into vanishing point.
 # MAKE NOTE THAT YOU ALWAYS DO WIDTH (X) THEN HEIGHT (Y).
-roi_points = np.array([[250, ORIGINAL_SIZE[1] - 55],
-                       [ORIGINAL_SIZE[0] - 250, ORIGINAL_SIZE[1] - 55],
+roi_points = np.array([[300, ORIGINAL_SIZE[1] - 55],
+                       [ORIGINAL_SIZE[0] - 300, ORIGINAL_SIZE[1] - 55],
                        [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 295]])
 roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
 cv2.fillPoly(roi, [roi_points], 1)
@@ -78,12 +78,14 @@ for line in lines:
         # Average out the lines
         slope = (y2 - y1) / (x2 - x1)
         intercept = y1 - (slope * x1)
-        if slope > 0:
+        if abs(slope) > 5:
+            pass
+        elif slope > 0:
             right_av.append([slope, intercept])
-            #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
+            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
         else:
             left_av.append([slope, intercept])
-            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
 
         x_iter_max = max(x1, x2)
         x_iter_min = min(x1, x2)
@@ -230,8 +232,6 @@ A_parallel_pt = A_parallel + P
 # Find Intercept
 
 cv2.line(f,traj_bot, A_parallel_pt.astype("int"), (0, 0, 255), 3)
-
-#print(src_pts)
 
 plt.imshow(f)
 plt.show()

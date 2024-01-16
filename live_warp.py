@@ -13,8 +13,8 @@ ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
 def getROI():
-    roi_points = np.array([[100, ORIGINAL_SIZE[1] - 55],
-                       [ORIGINAL_SIZE[0] - 100, ORIGINAL_SIZE[1] - 55],
+    roi_points = np.array([[200, ORIGINAL_SIZE[1] - 55],
+                       [ORIGINAL_SIZE[0] - 200, ORIGINAL_SIZE[1] - 55],
                        [ORIGINAL_SIZE[0] // 2, ORIGINAL_SIZE[1] - 295]])
     roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
     cv2.fillPoly(roi, [roi_points], 1)
@@ -60,7 +60,9 @@ def main(img):
             # Average out the lines
             slope = (y2 - y1) / (x2 - x1)
             intercept = y1 - (slope * x1)
-            if slope > 0:
+            if abs(slope) > 5:
+                pass
+            elif slope > 0:
                 right_av.append([slope, intercept])
                 #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
             else:
@@ -112,6 +114,59 @@ def main(img):
     M = cv2.getPerspectiveTransform(src_pts, dst_pts)
     warped_img = cv2.warpPerspective(img, M, WARPED_SIZE)
     
+    f = warped_img
+
+    # Transform averaged points into warped coordinates.
+    # Endpoints for averaged lines
+    bot_left = np.array([left_x1, y1], dtype="float32")
+    top_left = np.array([left_x2, int(y2)], dtype="float32")
+    bot_right = np.array([right_x1, y1], dtype="float32")
+    top_right = np.array([right_x2, int(y2)], dtype="float32")
+
+    # Transforming above endpoints
+    bot_left = cv2.perspectiveTransform(np.array([[bot_left]]), M, WARPED_SIZE).squeeze()
+    top_left = cv2.perspectiveTransform(np.array([[top_left]]), M, WARPED_SIZE).squeeze()
+    bot_right = cv2.perspectiveTransform(np.array([[bot_right]]), M, WARPED_SIZE).squeeze()
+    top_right = cv2.perspectiveTransform(np.array([[top_right]]), M, WARPED_SIZE).squeeze()
+    cv2.line(f, bot_left.astype("int"), top_left.astype("int"), (0, 255, 0), 3)
+    cv2.line(f, bot_right.astype("int"), top_right.astype("int"), (0, 255, 0), 3)
+
+    mid_top = [int((top_left[0] + top_right[0]) / 2),
+            int((top_left[1] + top_right[1]) / 2)]
+    mid_bot = [int((bot_left[0] + bot_right[0]) / 2),
+            int((bot_left[1] + bot_right[1]) / 2)]
+
+    # Drawing mid-line
+    cv2.line(f, mid_top, mid_bot, (0, 0, 255), 3)
+    # Add current car trajectory
+    traj_bot = [f.shape[1] // 2, 600]
+    traj_top = [f.shape[1] // 2, 0]
+    cv2.line(f,traj_bot, traj_top, (0, 0, 255), 3)
+    x = traj_bot[0]
+    mid_slope = 0
+    if mid_top[0] - mid_bot[0] != 0:
+        mid_slope = (mid_top[1] - mid_bot[1]) / (mid_top[0] - mid_bot[0])
+    else:
+        mid_slope = (mid_top[1] - mid_bot[1]) * 1000
+    mid_int = mid_top[1] - mid_top[0] * mid_slope
+    y = x * mid_slope + mid_int
+    P = np.array([x, y])
+
+    # Calculating pixel distance between averaged line and trajectory line.
+    PA = np.array(traj_bot) - P
+    PB = np.array(mid_bot) - P
+
+    PB_mag = np.linalg.norm(PB)
+    PB_unit = PB / PB_mag
+    A_parallel = np.dot(PA, PB_unit) * PB_unit
+    A_parallel_pt = A_parallel + P
+
+    # Find Intercept
+    vec = traj_bot - A_parallel_pt
+    vec_mag = np.linalg.norm(vec)
+    cv2.putText(img, str(vec_mag), (0, 200), cv2.FONT_HERSHEY_SIMPLEX ,  
+                   1, (0, 255, 0), 2, cv2.LINE_AA) 
+
     return img
 
 if __name__ == "__main__":
