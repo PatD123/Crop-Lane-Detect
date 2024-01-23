@@ -172,7 +172,7 @@ def main(img):
     return img
 
 if __name__ == "__main__":
-    clip  = VideoFileClip("urmom.mp4")
+    clip  = VideoFileClip("agri_videos/0123.mp4")
     mod_clip = clip.fl_image(main)
 
-    mod_clip.write_videofile("output_video.mp4", audio=False)
+    mod_clip.write_videofile("agri_videos/output_video.mp4", audio=False)
