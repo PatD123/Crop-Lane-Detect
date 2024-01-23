@@ -11,9 +11,7 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-#imgs = ["test_images2/frame0312.jpg"]
-#imgs = ["test_images2/straight_lines1.jpg"]
-imgs = ["agri_images/0001.jpg"]
+imgs = ["agri_images/0009.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -21,20 +19,18 @@ img = mpimg.imread(imgs[0])
 # y=665 the lower bound (original_size[1] - 55).
 # Make a triangle shape to identify lines that go off into vanishing point.
 # MAKE NOTE THAT YOU ALWAYS DO WIDTH (X) THEN HEIGHT (Y).
-roi_points = np.array([[200, ORIGINAL_SIZE[1] - 35],
-                       [ORIGINAL_SIZE[0] - 200, ORIGINAL_SIZE[1] - 35],
-                       [ORIGINAL_SIZE[0] // 2 + 10, ORIGINAL_SIZE[1] - 435]])
+roi_points = np.array([[0, ORIGINAL_SIZE[1] - 25],
+                       [ORIGINAL_SIZE[0], ORIGINAL_SIZE[1] - 25],
+                       [ORIGINAL_SIZE[0] // 2 + 10, ORIGINAL_SIZE[1] - 540]])
 roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
 cv2.fillPoly(roi, [roi_points], 1)
 
 # Employing Gaussian Blur
-img = cv2.GaussianBlur(img,(3,3),2)
 kernel = np.ones((5,5),np.uint8)
-img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+img = cv2.GaussianBlur(img,(3,3),2)
+erosion = cv2.erode(img,kernel,iterations = 1)
 
 #img = cv2.addWeighted(img, 2.3, np.zeros(img.shape, img.dtype), 0, 4)
-plt.imshow(img)
-plt.show() 
 
 # Might need to skip horizontal lines when doing HoughLine
 
@@ -56,6 +52,7 @@ _h_channel = cv2.equalizeHist(_h_channel)
 low_thresh = 100
 high_thresh = 200
 # Better to do Canny on lightness channel
+_h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
 edges = cv2.Canny(_h_channel, high_thresh, low_thresh)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
 plt.imshow(new_img)
@@ -87,11 +84,11 @@ for line in lines:
         elif slope > 0:
             print(slope)
             right_av.append([slope, intercept])
-            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
+            #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
         else:
             print(slope)
             left_av.append([slope, intercept])
-            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
 
         x_iter_max = max(x1, x2)
         x_iter_min = min(x1, x2)
@@ -158,10 +155,10 @@ p3 = find_pt_inline(p2, vp, bot)
 p4 = find_pt_inline(p1, vp, bot)
 
 src_pts = np.float32([p1, p2, p3, p4])
-src_pts = np.float32([[ 501.2556, 384.81726 ],
-                      [ 772.2556, 384.81726 ],
-                      [1110.286, 665.      ],
-                      [200, 665.      ]])
+src_pts = np.float32([[ 400.2556, 384.81726 ],
+                      [ 860.2556, 384.81726 ],
+                      [1280, 665.      ],
+                      [0, 665.      ]])
 
 dst_pts = np.float32([[0, 0], [WARPED_SIZE[0], 0],
                        [WARPED_SIZE[0], WARPED_SIZE[1]],
