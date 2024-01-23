@@ -28,7 +28,7 @@ cv2.fillPoly(roi, [roi_points], 1)
 # Employing Gaussian Blur
 kernel = np.ones((5,5),np.uint8)
 img = cv2.GaussianBlur(img,(3,3),2)
-erosion = cv2.erode(img,kernel,iterations = 1)
+img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
 
 #img = cv2.addWeighted(img, 2.3, np.zeros(img.shape, img.dtype), 0, 4)
 
