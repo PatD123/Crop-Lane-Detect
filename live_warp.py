@@ -170,7 +170,7 @@ def main(img):
     return img
 
 if __name__ == "__main__":
-    clip  = VideoFileClip("challenge_video.mp4")
+    clip  = VideoFileClip("urmom.mp4")
     mod_clip = clip.fl_image(main)
 
     mod_clip.write_videofile("output_video.mp4", audio=False)
