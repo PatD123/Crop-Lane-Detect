@@ -9,7 +9,8 @@ https://github.com/PatD123/lane_detec/assets/76749942/dda1d859-2e88-408e-854d-e4
 1. Make python virtual env and activate venv.
 2. Install requirements.
 3. Change directory into /lane_detec/src
-4. Run
+4. Run the desired .py file.
+
 For individual frames...
 ```
 py agri_warp.py
