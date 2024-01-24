@@ -53,9 +53,10 @@ low_thresh = 100
 high_thresh = 200
 # Better to do Canny on lightness channel
 _h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
+_h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
 edges = cv2.Canny(_h_channel, high_thresh, low_thresh)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
-plt.imshow(new_img)
+plt.imshow(_h_channel)
 plt.show()
 lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 100, None, 180, 120)
 
@@ -155,8 +156,8 @@ p3 = find_pt_inline(p2, vp, bot)
 p4 = find_pt_inline(p1, vp, bot)
 
 src_pts = np.float32([p1, p2, p3, p4])
-src_pts = np.float32([[ 400.2556, 384.81726 ],
-                      [ 860.2556, 384.81726 ],
+src_pts = np.float32([[0, 360],
+                      [1280, 360],
                       [1280, 665.      ],
                       [0, 665.      ]])
 

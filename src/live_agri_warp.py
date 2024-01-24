@@ -45,6 +45,7 @@ def getLines(img):
     high_thresh = 200
     # Better to do Canny on lightness channel
     _h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
+    _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
     edges = cv2.Canny(_h_channel, low_thresh, high_thresh)
     new_img = cv2.bitwise_and(edges, edges, mask=roi)
     lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 30, None, 180, 120)
@@ -102,8 +103,8 @@ def main(img):
         return img
 
     # Hard-coded src and dest pts
-    src_pts = np.float32([[ 400.2556, 384.81726 ],
-                      [ 860.2556, 384.81726 ],
+    src_pts = np.float32([[0, 360],
+                      [1280, 360],
                       [1280, 665.      ],
                       [0, 665.      ]])
     dst_pts = np.float32([[0, 0], [WARPED_SIZE[0], 0],
