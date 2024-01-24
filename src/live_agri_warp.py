@@ -169,7 +169,7 @@ def main(img):
     vec = traj_bot - A_parallel_pt
     vec_mag = np.linalg.norm(vec)
     cv2.putText(img, str(vec_mag), (0, 200), cv2.FONT_HERSHEY_SIMPLEX ,  
-                   1, (0, 255, 0), 2, cv2.LINE_AA) 
+                   1, (0, 0, 0), 2, cv2.LINE_AA) 
 
     return img
 
