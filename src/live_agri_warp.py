@@ -44,7 +44,7 @@ def getLines(img):
     low_thresh = 100
     high_thresh = 200
     # Better to do Canny on lightness channel
-    _h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
+    _h_channel = cv2.erode(_h_channel,kernel,iterations = 3)
     _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
     edges = cv2.Canny(_h_channel, low_thresh, high_thresh)
     new_img = cv2.bitwise_and(edges, edges, mask=roi)

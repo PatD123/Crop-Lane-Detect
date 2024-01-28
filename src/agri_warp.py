@@ -49,6 +49,7 @@ _s_channel = img_HLS[:, :, 2]
 _h_channel = cv2.equalizeHist(_h_channel)
 
 
+
 low_thresh = 100
 high_thresh = 200
 # Better to do Canny on lightness channel
@@ -56,7 +57,7 @@ _h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
 _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
 edges = cv2.Canny(_h_channel, high_thresh, low_thresh)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
-plt.imshow(_h_channel)
+plt.imshow(edges)
 plt.show()
 lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 100, None, 180, 120)
 
