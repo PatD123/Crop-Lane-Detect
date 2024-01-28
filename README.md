@@ -24,5 +24,6 @@ py live_agri_warp.py
 1. Kalman Filtering to track lines more smoothly
 2. Find a way to determine when to switch ROIs
 
-[!NOTE] If anybody can tell me about 2, that'd be cool. But no one looks
+> [!NOTE] 
+If anybody can tell me about 2, that'd be cool. But no one looks
 at this repo, unfortunado.... 
