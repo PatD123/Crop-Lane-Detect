@@ -11,7 +11,7 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["../agri_images/0045.jpg"]
+imgs = ["../agri_images/0041.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -22,11 +22,15 @@ img = mpimg.imread(imgs[0])
 roi_points = np.array([[0, ORIGINAL_SIZE[1] - 25],
                        [ORIGINAL_SIZE[0], ORIGINAL_SIZE[1] - 25],
                        [ORIGINAL_SIZE[0] // 2 + 10, ORIGINAL_SIZE[1] - 540]])
+roi_points = np.array([[0, 360],
+                       [1280, 360],
+                       [1280, 665],
+                       [0, 665]])
 roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
 cv2.fillPoly(roi, [roi_points], 1)
 
 # Employing Gaussian Blur
-kernel = np.ones((5,5),np.uint8)
+kernel = np.ones((3,3),np.uint8)
 img = cv2.GaussianBlur(img,(3,3),2)
 img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
 
@@ -42,24 +46,20 @@ _s_channel = img_HLS[:, :, 2]
 
 # print(_l_channel[558][412])
 
-#ret, p = cv2.threshold(_l_channel,140, 255,cv2.THRESH_BINARY)
-#ret, q = cv2.threshold(_l_channel,160,255,cv2.THRESH_BINARY)
-#_l_channel = cv2.bitwise_xor(p, q)
-
 _h_channel = cv2.equalizeHist(_h_channel)
-
-
 
 low_thresh = 100
 high_thresh = 200
 # Better to do Canny on lightness channel
-_h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
+#_h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
+_h_channel = cv2.morphologyEx(_h_channel, cv2.MORPH_CLOSE, kernel)
+_h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
 _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
 edges = cv2.Canny(_h_channel, high_thresh, low_thresh)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
-plt.imshow(edges)
+plt.imshow(new_img)
 plt.show()
-lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 100, None, 180, 120)
+lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 90, None, 180, 120)
 
 Lhs = np.zeros((2, 2), dtype = np.float32)
 Rhs = np.zeros((2, 1), dtype = np.float32)
@@ -81,16 +81,16 @@ for line in lines:
         # Average out the lines
         slope = (y2 - y1) / (x2 - x1)
         intercept = y1 - (slope * x1)
-        if abs(slope) > 5 or slope == 0 or abs(slope) < 0.2:
+        if abs(slope) > 5 or slope == 0 or abs(slope) < 0.1:
             pass
         elif slope > 0:
             print(slope)
             right_av.append([slope, intercept])
-            #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
+            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
         else:
             print(slope)
             left_av.append([slope, intercept])
-            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
 
         x_iter_max = max(x1, x2)
         x_iter_min = min(x1, x2)

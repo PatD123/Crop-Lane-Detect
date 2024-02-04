@@ -16,6 +16,10 @@ def getROI():
     roi_points = np.array([[0, ORIGINAL_SIZE[1] - 25],
                        [ORIGINAL_SIZE[0], ORIGINAL_SIZE[1] - 25],
                        [ORIGINAL_SIZE[0] // 2 + 10, ORIGINAL_SIZE[1] - 540]])
+    roi_points = np.array([[0, 360],
+                       [1280, 360],
+                       [1280, 665],
+                       [0, 665]])
     roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
     cv2.fillPoly(roi, [roi_points], 1)
     return roi
@@ -25,7 +29,7 @@ def getLines(img):
 
     # Employing Gaussian Blur
     img = cv2.GaussianBlur(img,(3,3),2)
-    kernel = np.ones((5,5),np.uint8)
+    kernel = np.ones((3,3),np.uint8)
     img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
     # Might need to skip horizontal lines when doing HoughLine
 
@@ -44,11 +48,12 @@ def getLines(img):
     low_thresh = 100
     high_thresh = 200
     # Better to do Canny on lightness channel
-    _h_channel = cv2.erode(_h_channel,kernel,iterations = 3)
+    _h_channel = cv2.morphologyEx(_h_channel, cv2.MORPH_CLOSE, kernel)
+    _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
     _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
     edges = cv2.Canny(_h_channel, low_thresh, high_thresh)
     new_img = cv2.bitwise_and(edges, edges, mask=roi)
-    lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 30, None, 180, 120)
+    lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 80, None, 180, 120)
     return lines
 
 def main(img):
