@@ -8,10 +8,12 @@ import pickle as pickle
 import glob
 import math
 
+from DBSCAN import *
+
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["../agri_images/0021.jpg"]
+imgs = ["../agri_images/0041.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -70,6 +72,9 @@ x_max = 0
 x_min = 2555    
 left_av = []
 right_av = []
+db_dict = {}
+D = []
+dbscan = DBSCAN(50, 3)
 for line in lines:
     for x1, y1, x2, y2 in line:
         # Find the norm (the distances between the two points)
@@ -86,14 +91,15 @@ for line in lines:
         intercept = y1 - (slope * x1)
         if abs(slope) > 5 or slope == 0 or abs(slope) < 0.1:
             pass
-        elif slope > 0:
-            print(slope)
-            right_av.append([slope, intercept])
-            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
         else:
-            print(slope)
-            left_av.append([slope, intercept])
-            cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+            dbscan.update(line)
+
+            if slope > 0:
+                right_av.append([slope, intercept])
+                #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
+            else:
+                left_av.append([slope, intercept])
+                #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
 
         x_iter_max = max(x1, x2)
         x_iter_min = min(x1, x2)
@@ -108,8 +114,20 @@ vp = vp.flatten()
 print('vp is : ', vp)
 plt.plot(vp[0], vp[1], 'c^')
 
+classes = dbscan.scan()
+lines = dbscan.return_max(classes)
+for i in range(len(lines)):
+    line = lines[i]
+    x1 = line[0]
+    y1 = line[1]
+    x2 = line[2]
+    y2 = line[3]
+    cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+
 plt.imshow(img)
 plt.show()
+
+exit(0)
 
 # Cont. Averaging Lines
 left_fitted_av = np.average(left_av, axis=0)

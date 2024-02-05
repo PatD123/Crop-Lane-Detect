@@ -69,6 +69,7 @@ def main(img):
     right_av = []
     for line in lines:
         for x1, y1, x2, y2 in line:
+
             # Average out the lines
             slope = (y2 - y1) / (x2 - x1)
             intercept = y1 - (slope * x1)
@@ -80,7 +81,6 @@ def main(img):
             else:
                 left_av.append([slope, intercept])
                 #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
-    
     # Hard-coded VP
     vp = [664.16125, 419.31366]
     top = vp[1] + 65
