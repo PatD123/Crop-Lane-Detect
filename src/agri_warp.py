@@ -55,11 +55,14 @@ high_thresh = 200
 _h_channel = cv2.morphologyEx(_h_channel, cv2.MORPH_CLOSE, kernel)
 _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
 _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
+
+kernel = np.ones((5,5),np.uint8)
 edges = cv2.Canny(_h_channel, high_thresh, low_thresh)
+edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
-plt.imshow(new_img)
+plt.imshow(edges)
 plt.show()
-lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 90, None, 180, 120)
+lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 70, None, 180, 120)
 
 Lhs = np.zeros((2, 2), dtype = np.float32)
 Rhs = np.zeros((2, 1), dtype = np.float32)
