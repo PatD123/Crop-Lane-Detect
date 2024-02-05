@@ -20,6 +20,16 @@ For full videos...
 py live_agri_warp.py
 ```
 
+# New Features
+One of the issues that is currently being faced is that sometimes image preprocessing is
+just not enough and HoughLines refuses to get the correct line or rather, it gets more
+than it should. So in several feature images of the _h_channel, it'll show several clusters
+of lanes lines (should be 2, left and right lane line) but also some outlier lines that 
+currently affect the depiction of the average line. To fix this, DBSCAN is implemented
+to bolster lane detection and become more robust in the face of outliers!!!
+
+- If you wanna argue about K-means or DBSCAN, I'll be happy to shift perspective :)
+
 # Goals!!!!
 1. Kalman Filtering to track lines more smoothly
 2. Find a way to determine when to switch ROIs
