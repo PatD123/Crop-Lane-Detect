@@ -11,7 +11,7 @@ import math
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["../agri_images/0041.jpg"]
+imgs = ["../agri_images/0021.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -62,7 +62,7 @@ edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
 plt.imshow(edges)
 plt.show()
-lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 70, None, 180, 120)
+lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 60, None, 60, 100)
 
 Lhs = np.zeros((2, 2), dtype = np.float32)
 Rhs = np.zeros((2, 1), dtype = np.float32)
