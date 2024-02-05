@@ -1,4 +1,4 @@
-# Lane Detection 
+# Lane Detection w/ DBSCAN Clustering
 that finds distance from center of detected lanes.
 - warp2.py and live_warp.py work with car lanes.
 - **ONLY** agri_warp.py and live_agri_warp.py work for agricultural rows of crops
