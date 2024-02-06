@@ -8,14 +8,15 @@ import pickle as pickle
 import glob
 import math
 from moviepy.editor import *
+from DBSCAN import *
 
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
 def getROI():
-    roi_points = np.array([[0, ORIGINAL_SIZE[1] - 25],
-                       [ORIGINAL_SIZE[0], ORIGINAL_SIZE[1] - 25],
-                       [ORIGINAL_SIZE[0] // 2 + 10, ORIGINAL_SIZE[1] - 540]])
+    #roi_points = np.array([[0, ORIGINAL_SIZE[1] - 25],
+    #                   [ORIGINAL_SIZE[0], ORIGINAL_SIZE[1] - 25],
+    #                   [ORIGINAL_SIZE[0] // 2 + 10, ORIGINAL_SIZE[1] - 540]])
     roi_points = np.array([[0, 360],
                        [1280, 360],
                        [1280, 665],
@@ -23,6 +24,20 @@ def getROI():
     roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
     cv2.fillPoly(roi, [roi_points], 1)
     return roi
+
+def fillAvgs(lines):
+    l = []
+    for i in range(len(lines)):
+        line = lines[i]
+        x1 = line[0]
+        y1 = line[1]
+        x2 = line[2]
+        y2 = line[3]
+        slope = (y2 - y1) / (x2 - x1)
+        intercept = y1 - (slope * x1)
+        l.append([slope, intercept])
+        # cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+        return l
 
 def getLines(img):
     roi = getROI()
@@ -56,7 +71,7 @@ def getLines(img):
     edges = cv2.Canny(_h_channel, low_thresh, high_thresh)
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
     new_img = cv2.bitwise_and(edges, edges, mask=roi)
-    lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 80, None, 180, 120)
+    lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 60, None, 60, 100)
     return lines
 
 def main(img):
@@ -67,24 +82,27 @@ def main(img):
 
     left_av = []
     right_av = []
+    dbscan_left = DBSCAN(50, 2)
+    dbscan_right = DBSCAN(50, 2)
     for line in lines:
         for x1, y1, x2, y2 in line:
-
             # Average out the lines
             slope = (y2 - y1) / (x2 - x1)
-            intercept = y1 - (slope * x1)
-            if abs(slope) > 5:
+            if abs(slope) > 5 or slope == 0 or abs(slope) < 0.1:
                 pass
-            elif slope > 0:
-                right_av.append([slope, intercept])
-                #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
             else:
-                left_av.append([slope, intercept])
-                #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
-    # Hard-coded VP
-    vp = [664.16125, 419.31366]
-    top = vp[1] + 65
-    bot = ORIGINAL_SIZE[1] - 55
+                if slope > 0:
+                    dbscan_right.update(line)
+                else:
+                    dbscan_left.update(line)
+
+    left_classes = dbscan_left.scan()
+    left_lines = dbscan_left.return_max(left_classes)
+    left_av = fillAvgs(left_lines)
+
+    right_classes = dbscan_right.scan()
+    right_lines = dbscan_right.return_max(right_classes)
+    right_av = fillAvgs(right_lines)
 
     # Cont. Averaging Lines
     left_fitted_av = []
@@ -98,8 +116,10 @@ def main(img):
     else:
         return img
 
-    y1 = bot
-    y2 = top
+    top = ORIGINAL_SIZE[1] - 700
+    bot = ORIGINAL_SIZE[1] - 55
+    y1 = ORIGINAL_SIZE[1] - 55
+    y2 = ORIGINAL_SIZE[1] - 700
     try:
         left_x1 = int((y1 - left_fitted_av[1]) / left_fitted_av[0])
         left_x2 = int((y2 - left_fitted_av[1]) / left_fitted_av[0])

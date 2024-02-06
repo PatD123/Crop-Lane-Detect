@@ -28,21 +28,11 @@ class DBSCAN:
         It will return a list of cluster labels. The label -1 means noise, and then
         the clusters are numbered starting from 1.
         '''
-    
-        # This list will hold the final cluster assignment for each point in D.
-        # There are two reserved values:
-        #    -1 - Indicates a noise point
-        #     0 - Means the point hasn't been considered yet.
-        # Initially all labels are 0.    
+
         labels = [0]*len(self.points)
 
         # C is the ID of the current cluster.    
         C = 0
-        
-        # This outer loop is just responsible for picking new seed points--a point
-        # from which to grow a new cluster.
-        # Once a valid seed point is found, a new cluster is created, and the 
-        # cluster growth is all handled by the 'expandCluster' routine.
         
         # For each point P in the Dataset D...
         # ('P' is the index of the datapoint, rather than the datapoint itself.)
@@ -95,12 +85,7 @@ class DBSCAN:
         # Assign the cluster label to the seed point.
         labels[P] = C
         
-        # Look at each neighbor of P (neighbors are referred to as Pn). 
-        # NeighborPts will be used as a FIFO queue of points to search--that is, it
-        # will grow as we discover new branch points for the cluster. The FIFO
-        # behavior is accomplished by using a while-loop rather than a for-loop.
-        # In NeighborPts, the points are represented by their index in the original
-        # dataset.
+        # FIFO
         i = 0
         while i < len(NeighborPts):    
             
@@ -156,9 +141,16 @@ class DBSCAN:
         return neighbors
     
     def return_max(self, labels):
+        values, counts = np.unique(labels, return_counts=True)
+        if len(values) == 0 or (values[0] == -1 and len(values) == 1):
+            return []
+        idx = np.argmax(counts)
+        if values[idx] == -1:
+            idx = np.argmax(counts[1:]) + 1
+
         lines = []
         for i in range(len(labels)):
-            if(labels[i] == 1):
+            if(labels[i] == values[idx]):
                 lines.append(self.dbscan_dict[(self.points[i][0], self.points[i][1])])
         return lines
 
