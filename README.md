@@ -33,7 +33,7 @@ to bolster lane detection and become more robust in the face of outliers!!!
 # Goals!!!!
 1. Kalman Filtering to track lines more smoothly
 2. Find a way to determine when to switch ROIs
-  a. Partially being solved by DBSCAN - Might have to do better though?
+   - Partially being solved by DBSCAN - Might have to do better though?
 
 > [!NOTE] 
 If anybody can tell me about 2, that'd be cool. But no one looks
