@@ -8,10 +8,12 @@ import pickle as pickle
 import glob
 import math
 
+from DBSCAN import *
+
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
-imgs = ["../agri_images/0045.jpg"]
+imgs = ["../agri_images/0021.jpg"]
 img = mpimg.imread(imgs[0])
 
 # Get a new ROI for image, on which we apply Hough Transform.
@@ -22,11 +24,15 @@ img = mpimg.imread(imgs[0])
 roi_points = np.array([[0, ORIGINAL_SIZE[1] - 25],
                        [ORIGINAL_SIZE[0], ORIGINAL_SIZE[1] - 25],
                        [ORIGINAL_SIZE[0] // 2 + 10, ORIGINAL_SIZE[1] - 540]])
+roi_points = np.array([[0, 360],
+                       [1280, 360],
+                       [1280, 665],
+                       [0, 665]])
 roi = np.zeros((720, 1280), np.uint8) # uint8 good for 0-255 so good for small numbers like colors
 cv2.fillPoly(roi, [roi_points], 1)
 
 # Employing Gaussian Blur
-kernel = np.ones((5,5),np.uint8)
+kernel = np.ones((3,3),np.uint8)
 img = cv2.GaussianBlur(img,(3,3),2)
 img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
 
@@ -42,24 +48,23 @@ _s_channel = img_HLS[:, :, 2]
 
 # print(_l_channel[558][412])
 
-#ret, p = cv2.threshold(_l_channel,140, 255,cv2.THRESH_BINARY)
-#ret, q = cv2.threshold(_l_channel,160,255,cv2.THRESH_BINARY)
-#_l_channel = cv2.bitwise_xor(p, q)
-
 _h_channel = cv2.equalizeHist(_h_channel)
-
-
 
 low_thresh = 100
 high_thresh = 200
 # Better to do Canny on lightness channel
-_h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
+#_h_channel = cv2.erode(_h_channel,kernel,iterations = 1)
+_h_channel = cv2.morphologyEx(_h_channel, cv2.MORPH_CLOSE, kernel)
 _h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
+_h_channel = cv2.GaussianBlur(_h_channel,(3,3),2)
+
+kernel = np.ones((5,5),np.uint8)
 edges = cv2.Canny(_h_channel, high_thresh, low_thresh)
+edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 new_img = cv2.bitwise_and(edges, edges, mask=roi)
 plt.imshow(edges)
 plt.show()
-lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 100, None, 180, 120)
+lines = cv2.HoughLinesP(new_img, 2, np.pi/180, 60, None, 60, 100)
 
 Lhs = np.zeros((2, 2), dtype = np.float32)
 Rhs = np.zeros((2, 1), dtype = np.float32)
@@ -67,43 +72,42 @@ x_max = 0
 x_min = 2555    
 left_av = []
 right_av = []
+dbscan_left = DBSCAN(50, 2)
+dbscan_right = DBSCAN(50, 2)
 for line in lines:
     for x1, y1, x2, y2 in line:
-        # Find the norm (the distances between the two points)
-        normal = np.array([[-(y2-y1)], [x2-x1]], dtype = np.float32) # question about this implementation
-        normal = normal / np.linalg.norm(normal)
-        pt = np.array([[x1], [y1]], dtype = np.float32)
-        outer = np.matmul(normal, normal.T)
-        
-        Lhs += outer
-        Rhs += np.matmul(outer, pt) #use matmul for matrix multiply and not dot product
-
         # Average out the lines
         slope = (y2 - y1) / (x2 - x1)
         intercept = y1 - (slope * x1)
-        if abs(slope) > 5 or slope == 0 or abs(slope) < 0.2:
+        if abs(slope) > 5 or slope == 0 or abs(slope) < 0.1:
             pass
-        elif slope > 0:
-            print(slope)
-            right_av.append([slope, intercept])
-            #cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), thickness = 2)
         else:
-            print(slope)
-            left_av.append([slope, intercept])
-            #cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+            if slope > 0:
+                dbscan_right.update(line)
+            else:
+                dbscan_left.update(line)
 
-        x_iter_max = max(x1, x2)
-        x_iter_min = min(x1, x2)
-        x_max = max(x_max, x_iter_max)
-        x_min = min(x_min, x_iter_min)
-width = x_max - x_min
-print('width : ', width)
-# Calculate Vanishing Point
-vp = np.matmul(np.linalg.inv(Lhs), Rhs)
-vp = vp.flatten()
+def fillAvgs(lines):
+    l = []
+    for i in range(len(lines)):
+        line = lines[i]
+        x1 = line[0]
+        y1 = line[1]
+        x2 = line[2]
+        y2 = line[3]
+        slope = (y2 - y1) / (x2 - x1)
+        intercept = y1 - (slope * x1)
+        l.append([slope, intercept])
+        # cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
+        return l
 
-print('vp is : ', vp)
-plt.plot(vp[0], vp[1], 'c^')
+left_classes = dbscan_left.scan()
+left_lines = dbscan_left.return_max(left_classes)
+left_av = fillAvgs(left_lines)
+
+right_classes = dbscan_right.scan()
+right_lines = dbscan_right.return_max(right_classes)
+right_av = fillAvgs(right_lines)
 
 plt.imshow(img)
 plt.show()
@@ -111,52 +115,19 @@ plt.show()
 # Cont. Averaging Lines
 left_fitted_av = np.average(left_av, axis=0)
 right_fitted_av = np.average(right_av, axis=0)
-
-# Drawing up source points for perspective warps
-def find_pt_inline(p1, p2, y):
-    """
-    Here we use point-slope formula in order to find a point that is present on the line
-    that passes through our vanishing point (vp). 
-    input: points p1, p2, and y. They come is as tuples [x, y]
-    We then use the point-slope formula: y - b = m(x - a)
-    y: y-coordinate of desired point on the line
-    x: x-coordinate of desired point on the line
-    m: slope
-    b: y-coordinate of p1
-    a: x-coodrinate of p1
-    x = p1x + (1/m)(y - p1y)
-    """
-    m_inv = (p2[0] - p1[0]) / float(p2[1] - p1[1])
-    Δy = (y - p1[1])
-    x = p1[0] + m_inv * Δy
-    return [x, y]
-
-top = vp[1] + 65
-bot = ORIGINAL_SIZE[1] - 55
-
-#print(900*right_av[0][0] + right_av[0][1])
-#cv2.line(img, (0, -38), (900, 1188), (0, 0, 255), 3)
-
+print(left_fitted_av, right_fitted_av)
 
 # Cont. Averaging Lines
-y1 = bot
-y2 = top
+top = ORIGINAL_SIZE[1] - 700
+bot = ORIGINAL_SIZE[1] - 55
+y1 = ORIGINAL_SIZE[1] - 55
+y2 = ORIGINAL_SIZE[1] - 700
 left_x1 = int((y1 - left_fitted_av[1]) / left_fitted_av[0])
 left_x2 = int((y2 - left_fitted_av[1]) / left_fitted_av[0])
 right_x1 = int((y1 - right_fitted_av[1]) / right_fitted_av[0])
 right_x2 = int((y2 - right_fitted_av[1]) / right_fitted_av[0])
 cv2.line(img, (left_x1, y1), (left_x2, int(y2)), (255, 0, 0), thickness = 2)
 cv2.line(img, (right_x1, y1), (right_x2, int(y2)), (255, 0, 0), thickness = 2)
-
-# Make a large width so that you can grab the lines on the challenge video
-width = 300
-
-p1 = [vp[0] - width/2, top]
-p2 = [vp[0] + width/2, top]
-p3 = find_pt_inline(p2, vp, bot)
-p4 = find_pt_inline(p1, vp, bot)
-
-src_pts = np.float32([p1, p2, p3, p4])
 src_pts = np.float32([[0, 360],
                       [1280, 360],
                       [1280, 665.      ],
@@ -168,11 +139,6 @@ dst_pts = np.float32([[0, 0], [WARPED_SIZE[0], 0],
 
 # Draw Trapezoid
 cv2.polylines(img, [src_pts.astype(np.int32)],True, (0,200,100), thickness=5)
-plt.plot(p1[0], p1[1], 'r+')
-plt.plot(p2[0], p2[1], 'c^')
-plt.plot(p3[0], p3[1], 'r^')
-plt.plot(p4[0], p4[1], 'g^')
-plt.title('Trapezoid For Perspective Transform')
 
 plt.imshow(img)
 plt.show()
