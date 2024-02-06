@@ -4,7 +4,7 @@ that finds distance from center of detected lanes.
 - **ONLY** agri_warp.py and live_agri_warp.py work for agricultural rows of crops
 
 https://github.com/PatD123/lane_detec/assets/76749942/dda1d859-2e88-408e-854d-e4534c311b26
-
+(The above however does not include DBSCAN. If you download the current output_video.mp4, that includes the DBSCAN clustering algorithm)
 # How to use?
 1. Make python virtual env and activate venv.
 2. Install requirements.
@@ -33,6 +33,7 @@ to bolster lane detection and become more robust in the face of outliers!!!
 # Goals!!!!
 1. Kalman Filtering to track lines more smoothly
 2. Find a way to determine when to switch ROIs
+  a. Partially being solved by DBSCAN - Might have to do better though?
 
 > [!NOTE] 
 If anybody can tell me about 2, that'd be cool. But no one looks
