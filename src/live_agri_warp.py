@@ -119,7 +119,7 @@ def main(img):
     top = ORIGINAL_SIZE[1] - 700
     bot = ORIGINAL_SIZE[1] - 55
     y1 = ORIGINAL_SIZE[1] - 55
-    y2 = ORIGINAL_SIZE[1] - 700
+    y2 = ORIGINAL_SIZE[1] - 500
     try:
         left_x1 = int((y1 - left_fitted_av[1]) / left_fitted_av[0])
         left_x2 = int((y2 - left_fitted_av[1]) / left_fitted_av[0])
