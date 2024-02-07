@@ -138,7 +138,7 @@ def main(img):
     dst_pts = np.float32([[0, 0], [WARPED_SIZE[0], 0],
                        [WARPED_SIZE[0], WARPED_SIZE[1]],
                        [0, WARPED_SIZE[1]]])
-    # Draw Trapezoid
+    # Draw ROI
     cv2.polylines(img, [src_pts.astype(np.int32)],True, (0,200,100), thickness=2)
 
     src_pts[0] += [-1, 1]
@@ -156,10 +156,13 @@ def main(img):
     top_right = np.array([right_x2, int(y2)], dtype="float32")
 
     # Transforming above endpoints
-    bot_left = cv2.perspectiveTransform(np.array([[bot_left]]), M, WARPED_SIZE).squeeze()
-    top_left = cv2.perspectiveTransform(np.array([[top_left]]), M, WARPED_SIZE).squeeze()
-    bot_right = cv2.perspectiveTransform(np.array([[bot_right]]), M, WARPED_SIZE).squeeze()
-    top_right = cv2.perspectiveTransform(np.array([[top_right]]), M, WARPED_SIZE).squeeze()
+    def transformPoints(p):
+        return cv2.perspectiveTransform(np.array([[p]]), M, WARPED_SIZE).squeeze()
+    
+    bot_left = transformPoints(bot_left)
+    top_left = transformPoints(top_left)
+    bot_right = transformPoints(bot_right)
+    top_right = transformPoints(top_right)
     cv2.line(f, bot_left.astype("int"), top_left.astype("int"), (0, 255, 0), 3)
     cv2.line(f, bot_right.astype("int"), top_right.astype("int"), (0, 255, 0), 3)
 
