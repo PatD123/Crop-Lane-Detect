@@ -1,5 +1,14 @@
 # Lane Detection w/ DBSCAN Clustering
-that finds distance from center of detected lanes.
+This is a lane detection challenge to preprocess live video feed and detect rows of crops as
+lanes that a precision Agribot can follow. This project heavily relies on several image
+processing techniques such as Gaussian Blur and Erosion/Dilation, the classic Hough Lines
+detector, an inverse perspective mapping algorithm, and a DBSCAN midpoint clustering technique to average lane detections.
+The below video is one of the results that I have achieved, with others located in `/agri_videos`. Further, 
+overall pipeline is able to localize camera (where the footage is being taken), allowing a future robot
+to know it's own position and navigate autonomously.
+
+Uses OpenCV and Python for the following.
+
 - warp2.py and live_warp.py work with car lanes.
 - **ONLY** agri_warp.py and live_agri_warp.py work for agricultural rows of crops
 
