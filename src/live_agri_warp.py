@@ -13,6 +13,7 @@ from DBSCAN import *
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
+# For temporal smoothing
 left_buffer = []
 right_buffer = []
 buffer_size = 5
@@ -133,12 +134,14 @@ def main(img):
     # Get mean of buffered lines
     left_fitted_av = np.mean(left_buffer, axis=0)
     right_fitted_av = np.mean(right_buffer, axis=0)
+    # NOW WE HAVE SMOOTHED LINES AND WE PROCEED AS BEFORE.
 
     top = ORIGINAL_SIZE[1] - 700
     bot = ORIGINAL_SIZE[1] - 55
     y1 = ORIGINAL_SIZE[1] - 55
     y2 = ORIGINAL_SIZE[1] - 500
     try:
+        # PLOTTING AND GETTING THE AVERAGED LINES.
         left_x1 = int((y1 - left_fitted_av[1]) / left_fitted_av[0])
         left_x2 = int((y2 - left_fitted_av[1]) / left_fitted_av[0])
         right_x1 = int((y1 - right_fitted_av[1]) / right_fitted_av[0])
@@ -159,6 +162,7 @@ def main(img):
     # Draw ROI
     cv2.polylines(img, [src_pts.astype(np.int32)],True, (0,200,100), thickness=2)
 
+    # INVERSE-PERSPECTIVE MAPPING TIME.
     src_pts[0] += [-1, 1]
     src_pts[1] += [1, 1]
     M = cv2.getPerspectiveTransform(src_pts, dst_pts)
