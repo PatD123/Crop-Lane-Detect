@@ -15,7 +15,7 @@ WARPED_SIZE = 500, 600
 
 left_buffer = []
 right_buffer = []
-buffer_size = 3
+buffer_size = 5
 
 def getROI():
     #roi_points = np.array([[0, ORIGINAL_SIZE[1] - 25],
