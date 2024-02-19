@@ -13,6 +13,8 @@ The below video is one of the results that I have achieved, with others located 
 overall pipeline is able to localize camera (where the footage is being taken), allowing a future robot
 to know it's own position and navigate autonomously.
 
+**If there is anything I could use to improve algorithm, tell me!! Much appreciation!**
+
 Uses OpenCV and Python for the following.
 
 - warp2.py and live_warp.py work with car lanes.
