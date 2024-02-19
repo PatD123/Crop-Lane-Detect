@@ -100,6 +100,8 @@ def fillAvgs(lines):
         l.append([slope, intercept])
         # cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), thickness = 2)
         return l
+    
+# l has (SLOPE, INTERCEPT) tuples
 
 left_classes = dbscan_left.scan()
 left_lines = dbscan_left.return_max(left_classes)

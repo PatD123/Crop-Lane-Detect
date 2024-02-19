@@ -13,6 +13,10 @@ from DBSCAN import *
 ORIGINAL_SIZE = 1280, 720
 WARPED_SIZE = 500, 600
 
+left_buffer = []
+right_buffer = []
+buffer_size = 3
+
 def getROI():
     #roi_points = np.array([[0, ORIGINAL_SIZE[1] - 25],
     #                   [ORIGINAL_SIZE[0], ORIGINAL_SIZE[1] - 25],
@@ -75,6 +79,8 @@ def getLines(img):
     return lines
 
 def main(img):
+    global left_buffer, right_buffer, buffer_size
+
     lines = getLines(img)
 
     if lines is None:
@@ -84,6 +90,7 @@ def main(img):
     right_av = []
     dbscan_left = DBSCAN(50, 2)
     dbscan_right = DBSCAN(50, 2)
+
     for line in lines:
         for x1, y1, x2, y2 in line:
             # Average out the lines
@@ -115,6 +122,17 @@ def main(img):
         right_fitted_av = np.average(right_av, axis=0)
     else:
         return img
+    
+    # Adding average line to buffer
+    def add_line_to_buffer(line_buffer, line):
+        line_buffer.append(line)
+        return line_buffer[-buffer_size:]
+    left_buffer = add_line_to_buffer(left_buffer, left_fitted_av)
+    right_buffer = add_line_to_buffer(right_buffer, right_fitted_av)
+
+    # Get mean of buffered lines
+    left_fitted_av = np.mean(left_buffer, axis=0)
+    right_fitted_av = np.mean(right_buffer, axis=0)
 
     top = ORIGINAL_SIZE[1] - 700
     bot = ORIGINAL_SIZE[1] - 55
