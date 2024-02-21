@@ -9,6 +9,12 @@ In further pruning, realized that Hough lines when predicting lines can be very 
 clustering technique as Hough Lines often predicted clusters of lines near the left and right lanes. This way, I could cluster but 
 also get rid of rather annoying outliers. Herein lies DBSCAN. I used DBSCAN midpoint clustering to average lane detections.
 
+Actually in a Computer Vision class, "Temporal Smoothing" was mentioned and decided to give it a look. Idea is that at the start
+of the algorithm, we keep a line buffer, that keeps track of a window of N past, averaged lines (line calculated from DBSCAN).
+Now, everytime I generate a new average line from DBSCAN, we slide this window (or rather we update this window so still N lines).
+This is done for both the left and right lanes so we keep priors for both. To display the detected lines, we take the mean of the slope
+and intercept of the lines in the buffer, allowing for temporal smoothing. Works very well!
+
 The below video is one of the results that I have achieved, with others located in `/agri_videos`. Further, 
 overall pipeline is able to localize camera (where the footage is being taken), allowing a future robot
 to know it's own position and navigate autonomously.
