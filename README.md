@@ -38,6 +38,8 @@ The black text in the upper right corner is dervived from IPM. Idea is that when
 birds-eye-view, the pixel-to-meter scaling factor should be the same (directly looking down). With
 some handy-dandy linear algebra, we are able to calculate the distance between the current vehicle
 trajectory and the reference line (the midline of the detected left and right lanes). 
+
+The purpose of the pixel-2-meter scaling is for input into a Model Predictive Architecture (cool, right?!)
 # How to use?
 1. Make python virtual env and activate venv.
 2. Install requirements.
