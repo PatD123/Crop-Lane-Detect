@@ -34,7 +34,10 @@ Example of **"WIDE"** crop lane detection.
 
 https://github.com/PatD123/Crop-Lane-Detect/assets/76749942/01f73df8-684d-44a4-a952-c2f0388b8949
 
-(The above however does not include DBSCAN. If you download the current output_video.mp4, that includes the DBSCAN clustering algorithm)
+The black text in the upper right corner is dervived from IPM. Idea is that when we project to
+birds-eye-view, the pixel-to-meter scaling factor should be the same (directly looking down). With
+some handy-dandy linear algebra, we are able to calculate the distance between the current vehicle
+trajectory and the reference line (the midline of the detected left and right lanes). 
 # How to use?
 1. Make python virtual env and activate venv.
 2. Install requirements.
